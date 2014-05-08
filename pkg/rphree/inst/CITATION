@@ -1,0 +1,24 @@
+citHeader("To cite Rphree in publications use:")
+
+MDL <- person(given = "Marco", family = "De Lucia",
+              email = "delucia@gfz-potsdam.de",
+              role = "cre")
+MK  <- person(given = "Michael", family = "Kuehn")
+
+citEntry(entry = "Article",
+         title = "Coupling R and PHREEQC: Efficient Programming of Geochemical Models.",
+         author = c(MDL, MK),
+         journal = "Energy Procedia",
+	 year = "2013",
+         volume = "40",
+         pages = "464-471",
+         doi = " 10.1016/j.egypro.2013.08.053", 
+         textVersion =   
+         paste0("De Lucia, M. and Kuehn, M. (2013).",
+                "Coupling R and PHREEQC: Efficient Programming of Geochemical Models.",
+                "Energy Procedia, 40, 464-471.",
+                "DOI:10.1016/j.egypro.2013.08.053")
+	 )
+
+citFooter("Please refer to 'http://wwwbrr.cr.usgs.gov/projects/GWC_coupled/phreeqc/index.html' for informations about PHREEQC. The original license agreement shipped with PHREEQC is included in this package, and credit is given to copyright holder of the software.\nSee",sQuote("citation()"),"for citing R itself.")
+

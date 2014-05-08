@@ -1,0 +1,11 @@
+TITLE Toy example of CO2(g) solubility
+SOLUTION 1
+units mol/kgw
+temp 25
+pH 7
+Na 2
+Cl 2
+PURE 1
+CO2(g) -3.5 10
+END
+
