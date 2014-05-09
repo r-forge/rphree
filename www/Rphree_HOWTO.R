@@ -1,19 +1,32 @@
-### Build and install under windows
-## 1. install R (32 & 64 bit) - probably 3.0.2 as of today 
+### Rphree-0.1-3, 2014 05 09
+### Marco De Lucia, delucia at gfz-potsdam.de
+
+
+### This should install the current version from rforge directly from
+### R:
+
+install.packages("Rphree", repos="http://R-Forge.R-project.org")
+
+
+### If this does not work, download manually the source code or the
+### compiled package from the rforge web site.
+
+### To build and install from source under windows:
+## 1. install R (32 & 64 bit) - probably 3.1.0 as of today 
 ## 2. install appropriate Rtools from http://cran.r-project.org/bin/windows/Rtools/
 ##    (I installed both on a remote server under "X:")
 ## 3. Open a DOS cmdline, integrate the PATH (of course depending on where you installed these tools).
-##    Just copy and paste this line - after modifications - in the dos windows:
+##    Just copy and paste this line - after opportune modifications - in the dos windows:
 
-PATH=X:\Rtools\bin;X:"R-3.0.2\bin";X:\Rtools\gcc-4.6.3\bin;%PATH%
+PATH=X:\Rtools\bin;X:"R-3.1.0\bin";X:\Rtools\gcc-4.6.3\bin;%PATH%
 
-## 4. In the cmdline, navigate where you did save the Rphree_0.1-2.tar.gz
+## 4. In the cmdline, navigate where you did save the Rphree_0.1-x.tar.gz
 ##    The following should compile and install both 32 and 64 bit version of the package 
 ##    (depending on what is installed on your machine)
 
 cd PATH\TO\YOUR\WORKING\DIR
 
-R CMD INSTALL --build Rphree_0.1-2.tar.gz
+R CMD INSTALL --build Rphree_0.1-x.tar.gz
 
 ## 5. Sit back and relax while compiling and installing!
 
@@ -39,7 +52,10 @@ ex1 <- RPhreeFile(system.file("extdata", "ex1.phrq", package="Rphree"), is.db=FA
 ## One needs to define a named logical vector exactly like this:
 mysel <- c(kin=FALSE, tot=TRUE, desc=TRUE, species = TRUE, pphases = TRUE, SI=TRUE, punch =FALSE)
 
-## There is an helper function for that, for checking and for generating valid selections:
+## NB: EQUILIBRIUM_PHASES is coded as "pphases" in Rphree, while the
+## simulations blocks in the input buffer use the keyword "PURE"!!
+## There is an helper function for that, for checking and for
+## generating valid selections:
 sel <- !RPhreeCheckSel()
 
 ## To visualize the difference:
@@ -54,14 +70,13 @@ equilln <- Rphree(ex1, db=llndb, sel=mysel, write=TRUE, out="ex1")
 equipqc <- Rphree(ex1, db=pqcdb, sel=mysel, write=FALSE)
 
 ## understanding the output
-str(equi)
+str(equilln)
 
 equilln$species
 equilln$pphases
 
 ## From a solution, create a new script (for restart):
 eq2 <- RInputFromList(equilln)
-
 
 #####################
 ## Distribute: assign specific values to a property in input
@@ -117,4 +132,17 @@ resextmin_lln <- Rphree(extmin, db=llndb,sel=mysel)
 
 VizMinDelta(list(resextmin_pqc,resextmin_lln),phases=c("Anhydrite","Calcite"), names=c("phreeqc.dat","llnl.dat"))
 
+
+## By default nothing gets written to disc, but you can let Rphree
+## write the standard outfile by specifying write=TRUE:
+equi_extrange_phrq <- Rphree(ext_range, db=pqcdb, sel=mysel, write=TRUE, out="equi_extrange")
+## Now in your current working dir you will have the file "equi_extrange.Rout"
+dir(pattern="Rout")
+# [1] "equi_extrange.Rout" "ex1.Rout"
+
+## There are helper functions to (partially) parse PHREEQC outfiles:
+equi_extrange_fromoutfile <- RReadOut(out="equi_extrange.Rout")
+## Currently tot, pphases and partly "desc" are read from outfile.
+equi_extrange_phrq[[1]]$pphases
+equi_extrange_fromoutfile[[1]]$pphases
 

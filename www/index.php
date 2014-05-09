@@ -43,9 +43,22 @@ echo $contents; } ?>
 
 <!-- end of project description -->
 
-<p>  <a href="Rphree_HOWTO.R"> Here </a> a simple usage exmple script. </p>
+
+<p><a href="http://r-forge.r-project.org/R/?group_id=1833">Here</a> is
+  the current build of the package,
+  while <a href="Rphree_HOWTO.R">here</a> you can find a simple usage
+  example script.</p>
+
+<p>Expect improved examples and tutorials/vignette in the near future.
+  Any contributions in this matter are welcomed!</p>
+
+<p>Consider signing up to the mailing list
+  <a href="http://lists.r-forge.r-project.org/cgi-bin/mailman/listinfo/rphree-general">rphree-general</a>
+  for questions and discussions. This is currently the only mailing
+  list concerning all aspects of development.</p>
 
 <p> The <strong>project summary page</strong> you can find <a href="http://<?php echo $domain; ?>/projects/<?php echo $group_name; ?>/"><strong>here</strong></a>. </p>
+
 
 </body>
 </html>
