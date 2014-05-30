@@ -1,5 +1,5 @@
 ### Marco De Lucia, delucia@gfz-potsdam.de, 2009-2014
-### Time-stamp: "Last modified 2014-02-13 12:01:03 delucia"
+### Time-stamp: "Last modified 2014-05-30 17:50:20 delucia"
 
 
 ##' Reads a normal PHREEQC input file and prepares it for
@@ -333,7 +333,8 @@ AddProp <- function(input, name, values, cat, kinpar=NULL, first=NULL)
 
 ##' Write an input buffer to a file on disk.
 ##'
-##' .. content for DETAILS ..
+##' It really just opens a file and uses "writeLines"" for writing the
+##' input to it.
 ##' @title RPhreeWriteInp
 ##' @param ofile designated file the input will be written to.
 ##' @param input the input buffer.
@@ -352,34 +353,45 @@ RPhreeWriteInp <- function(ofile,input)
 ##' Reads a phreeqc output file and forms a results list as if the
 ##' calculation were made with Rphree.
 ##'
-##' .. content for DETAILS ..
+##' Currently all blocks are read. NOTE: the "charge balance" and
+##' "Adjusted to redox" annotations are not read for the time being.
 ##' @title RReadOut
 ##' @param out The PHREEQC output file.
 ##' @return An output list, as if the simulation would have being run
-##' through
+##' through Rphree (the same blocks and the same names are returned)
 ##' @author MDL
 ##' @export
 RReadOut <- function(out)
 {
-    tot <- RPhreeFile(out, is.db=FALSE, tabs=TRUE) ## note that empty
-    ## lines are removed!
+    ## note that empty lines are removed!
+    tot <- RPhreeFile(out, is.db=FALSE, tabs=TRUE) 
 
     solutions <- grep("Beginning of initial solution calculations", tot)
     ntot <- length(solutions)
 
-    ## this index stores the lines marking initial solutions
-    initials <- seq(1,ntot)*2 -1 
+    ## This is unique (only for calculated solution)
+    endsim <- grep('End of simulation.',tot,fixed=TRUE)
 
     cat(paste("ReadOut::",ntot," sims in file",out,"..."))
 
-    ## "phase assemblage" is unique
+    ## "phase assemblage" is unique, but could not be there
+    has_pphases <- TRUE
     endkin  <- grep('-Phase assemblage-',tot,fixed=TRUE)
-
+    if (length(endkin)==0) {
+        ## This means we don't have any pure phase in the simulations,
+        ## and that the only solutions to read are the initial ones!
+        has_pphases <- FALSE
+        initials <- seq(1,ntot)
+    } else {
+        ## this index stores the lines marking initial solutions
+        initials <- -(seq(1,ntot)*2 -1)
+       
+    }
     ## for these, don't consider the "initial solution" instead
-    endpure <- grep('-Solution composition-',tot,fixed=TRUE)[-initials]
-    endcomp <- grep('-Description of solution-',tot,fixed=TRUE)[-initials]
-    enddesc <- grep('-Distribution of species-',tot,fixed=TRUE)[-initials]
-    endspec <- grep('-Saturation indices-',tot,fixed=TRUE)[-initials]
+    endpure <- grep('-Solution composition-',tot,fixed=TRUE)[initials]
+    endcomp <- grep('-Description of solution-',tot,fixed=TRUE)[initials]
+    enddesc <- grep('-Distribution of species-',tot,fixed=TRUE)[initials]
+    endspec <- grep('-Saturation indices-',tot,fixed=TRUE)[initials]
 
     ## create the container
     res <- vector(mode="list",length=ntot)
@@ -389,33 +401,39 @@ RReadOut <- function(out)
         ## cat(paste(":: Reading solution n. ",n,"\n"))
         
         ## check if there is a fatal error
-        error <- grep("^ERROR",tot[ solutions[n] : endkin[n] ])
+        error <- grep("^ERROR",tot[ solutions[n] : endsim[n] ])
         if (length(error) > 0) {
             res[[n]] <- "error"
             cat(" ERROR!!\n")
             next
         }
-        ## next block in output file is EQUILIBRIUM_PHASES
-        startpure <- endkin[n]+3
-        npure <- endpure[n] - startpure - 1
+
+        ## next block in output file is the "optional"
+        ## EQUILIBRIUM_PHASES
+        if (has_pphases) {
+            startpure <- endkin[n]+3
+            npure <- endpure[n] - startpure - 1
         
-        pure <- read.table( textConnection( tot[startpure:(startpure+npure)]), row.names=1, fill=TRUE, as.is=TRUE)
-        indreactants <- which(pure[,2]=="reactant")
-        if (length(indreactants) > 0)
-            {
-                for (ir in indreactants) {
-                    rownames(pure)[ir-1] <- paste(rownames(pure)[ir-1], rownames(pure)[ir],sep="_")
-                    pure[(ir-1),c(4,5,6)] <- pure[ir,c(3,4,5)]
+            pure <- read.table( textConnection( tot[startpure:(startpure+npure)]), row.names=1, fill=TRUE, as.is=TRUE)
+            indreactants <- which(pure[,2]=="reactant")
+            if (length(indreactants) > 0)
+                {
+                    for (ir in indreactants) {
+                        rownames(pure)[ir-1] <- paste(rownames(pure)[ir-1], rownames(pure)[ir],sep="_")
+                        pure[(ir-1),c(4,5,6)] <- pure[ir,c(3,4,5)]
+                    }
+                    pure <- pure[-indreactants,]
                 }
-                pure <- pure[-indreactants,]
-            }
-        pure <- pure[,c(5,6)]
+            pure <- pure[,c(5,6)]
+            
+            colnames(pure) <- c("moles","delta")
+            ##    if (verbose)
+            ##      cat(paste(":: Read pphases block ", n, "of length",npure+1," \n"))
+        } else {
+            pure <- NA
+        }
         
-        colnames(pure) <- c("moles","delta")
-        ##    if (verbose)
-        ##      cat(paste(":: Read pphases block ", n, "of length",npure+1," \n"))
-        
-        ## now solutes  
+        ## now total solutes  
         startcomp <- endpure[n] + 2
         ncomp <- endcomp[n]-startcomp
         comp <- read.table(textConnection(tot[startcomp:(startcomp+ncomp-1)]),row.names=1,fill=TRUE)
@@ -423,19 +441,51 @@ RReadOut <- function(out)
         ##    if (verbose)
         ##      cat(paste(":: Read total solutes block ", n, "\n"))
         
-        ## misc: pH, pe, ecc
-        pHline <- tot[max(grep('pH  = ',tot,fixed=TRUE))]
-        pH <- as.numeric(unlist(strsplit(pHline," +"))[3])
-        peline <- tot[max(grep('pe  = ',tot,fixed=TRUE))]
-        pe <- as.numeric(unlist(strsplit(peline," +"))[3])
-        templine <- tot[max(grep('Temperature (deg C)',tot,fixed=TRUE))]
-        temp <- as.numeric(unlist(strsplit(templine," +"))[5])
-        waterline <- tot[max(grep('Mass of water (kg)',tot,fixed=TRUE))]
-        water <- as.numeric(unlist(strsplit(waterline," +"))[6])
-        desc <- data.frame(val=c(pH,pe,temp,water),ann=c("charge","Adj","",""))
-        rownames(desc) <- c("pH","pe","temp","water")
+        ## desc: pH, pe, ecc
+        block <- tot[(endcomp[n]+1):(enddesc[n]-1)]
+
+        pH <- as.numeric(unlist(strsplit(grep('^pH',block, value=TRUE)," +"))[3])
+        pe <- as.numeric(unlist(strsplit(grep('^pe',block, value=TRUE)," +"))[3])
+        temp <- as.numeric(unlist(strsplit(grep('^Temperature ',block,value=TRUE)," = "))[2])
+        water <- as.numeric(unlist(strsplit(grep('Mass of water',block,fixed=TRUE,value=TRUE)," = "))[2])
+        WaterActivity <- as.numeric(unlist(strsplit(grep('Activity of water',block,fixed=TRUE,value=TRUE)," = "))[2])
+        IonStr <- as.numeric(unlist(strsplit(grep('Ionic strength',block,fixed=TRUE,value=TRUE)," = "))[2])
+        TotAlk <- as.numeric(unlist(strsplit(grep('Total alkalinity',block,fixed=TRUE,value=TRUE)," = "))[2])
+        Tot_C  <- as.numeric(unlist(strsplit(grep('Total carbon',block,fixed=TRUE,value=TRUE)," = "))[2])
+        Tot_CO2  <- as.numeric(unlist(strsplit(grep('Total CO2',block,fixed=TRUE,value=TRUE)," = "))[2])
+        ElBal <- as.numeric(unlist(strsplit(grep('Electrical balance',block,fixed=TRUE,value=TRUE)," = "))[2])
+        Per_Error <- as.numeric(unlist(strsplit(grep('Percent error',block,fixed=TRUE,value=TRUE)," = "))[2])
+        Iter <- as.numeric(unlist(strsplit(grep('^Iterations',block,value=TRUE)," = "))[2])
+        Tot_H <- as.numeric(unlist(strsplit(grep('Total H',block,fixed=TRUE,value=TRUE)," = "))[2])
+        Tot_O <- as.numeric(unlist(strsplit(grep('Total O',block,fixed=TRUE,value=TRUE)," = "))[2])
+                block <- tot[(endcomp[n]+1):(enddesc[n]-1)]
+
+        desc <- data.frame(val=c(pH=pH,pe=pe,temp=temp,water=water,WaterActivity=WaterActivity,
+                               Tot_Alk=TotAlk, IonicStr=IonStr, ElectrBal=ElBal,
+                               Per_Error=Per_Error, iterations=Iter, Tot_CO2=Tot_CO2, Tot_H=Tot_H, Tot_O=Tot_O))
+            
+        ## next block in output is the speciation
+        block <- tot[(enddesc[n] + 4) :( endspec[n] - 1)]
+        ## find out the short lines
+        shorts <- nchar(block) 
+        excl <- which(shorts < mean(shorts))
+        block <- block[-excl]
+        ## Now we can read.table it
+        tmp <- read.table( textConnection(block), fill=TRUE, as.is=TRUE)[,c(1,2,3)]
+        ## remove duplicated
+        rnames <- tmp$V1
+        dup <- which(!duplicated(rnames))
+        species <- tmp[dup,c(2,3)]
+        rownames(species) <- rnames[dup]
+        colnames(species) <- c("molal","act")
+
+        ## Now saturation indexes
+        block <- tot[(endspec[n] + 2) :( endsim[n] - 4)]
+        SI <- read.table( textConnection(block), fill=TRUE, row.names=1, as.is=TRUE)
+        names(SI) <- c("SI","IAP","logK","formula")
         
-        res[[n]] <- list(desc=desc,pphases=pure,tot=comp)
+        ## finally pack all together
+        res[[n]] <- list(desc=desc,pphases=pure,tot=comp, SI=SI, species=species)
         
     }  ## end of loop over simulations
 

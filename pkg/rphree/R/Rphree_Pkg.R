@@ -2,7 +2,7 @@
 ### packaging-related functions
 ### 
 ### Marco De Lucia, delucia@gfz-potsdam.de, 2009-2014
-### Time-stamp: "Last modified 2014-01-31 14:41:14 delucia"
+### Time-stamp: "Last modified 2014-05-30 17:26:33 delucia"
 
 .onAttach <- function(libname,pkgname) {
   ## figuring version number, adapted from package mgcv/CHNOSZ
@@ -18,5 +18,5 @@
   um <- strsplit(date, " ")[[1]]
   date <- um[nchar(um)>0][2]
   ## identify the program and version
-  packageStartupMessage(paste(":: This is Rphree version ", version, " (", date, ")", sep=""))
+  packageStartupMessage(paste(":: This is [rforge/dev] Rphree version ", version, " (", date, ")", sep=""))
 }
