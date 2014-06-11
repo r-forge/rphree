@@ -1,5 +1,5 @@
 ### Marco De Lucia, delucia@gfz-potsdam.de, 2009-2014
-### Time-stamp: "Last modified 2014-06-10 14:41:18 delucia"
+### Time-stamp: "Last modified 2014-06-11 16:43:45 delucia"
 
 
 ##' Reads a normal PHREEQC input file and prepares it for
@@ -294,8 +294,8 @@ AddProp <- function(input, name, values, cat, kinpar=NULL, first=NULL)
         else
             newinp <- tmp
     } else { ## from here pphases and tot
-        ## for now, use "PURE" as delimiter 
-        markpure <- grep("PURE",input)
+        ## use "PURE*" or "EQUILIBR*" as delimiter for the pphases block
+        markpure <- grep("^PURE|^EQUIL",input)
 
         ## one line before if is a "tot" component, one line after if is
         ## a "pphases"
