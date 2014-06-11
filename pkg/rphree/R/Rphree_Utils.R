@@ -1,5 +1,5 @@
 ### Marco De Lucia, delucia@gfz-potsdam.de, 2009-2014
-### Time-stamp: "Last modified 2014-05-30 17:50:20 delucia"
+### Time-stamp: "Last modified 2014-06-10 14:41:18 delucia"
 
 
 ##' Reads a normal PHREEQC input file and prepares it for
@@ -414,7 +414,9 @@ RReadOut <- function(out)
             startpure <- endkin[n]+3
             npure <- endpure[n] - startpure - 1
         
-            pure <- read.table( textConnection( tot[startpure:(startpure+npure)]), row.names=1, fill=TRUE, as.is=TRUE)
+            pure_conn <- textConnection( tot[startpure:(startpure+npure)])
+            pure <- read.table( pure_conn, row.names=1, fill=TRUE, as.is=TRUE)
+            close(pure_conn)
             indreactants <- which(pure[,2]=="reactant")
             if (length(indreactants) > 0)
                 {
@@ -436,7 +438,9 @@ RReadOut <- function(out)
         ## now total solutes  
         startcomp <- endpure[n] + 2
         ncomp <- endcomp[n]-startcomp
-        comp <- read.table(textConnection(tot[startcomp:(startcomp+ncomp-1)]),row.names=1,fill=TRUE)
+        comp_conn <- textConnection(tot[startcomp:(startcomp+ncomp-1)])
+        comp <- read.table(comp_conn,row.names=1,fill=TRUE)
+        close(comp_conn)
         colnames(comp) <- c("molal","moles")
         ##    if (verbose)
         ##      cat(paste(":: Read total solutes block ", n, "\n"))
@@ -470,8 +474,11 @@ RReadOut <- function(out)
         shorts <- nchar(block) 
         excl <- which(shorts < mean(shorts))
         block <- block[-excl]
+
+        block_conn <- textConnection(block)
         ## Now we can read.table it
-        tmp <- read.table( textConnection(block), fill=TRUE, as.is=TRUE)[,c(1,2,3)]
+        tmp <- read.table( block_conn, fill=TRUE, as.is=TRUE)[,c(1,2,3)]
+        close(block_conn)
         ## remove duplicated
         rnames <- tmp$V1
         dup <- which(!duplicated(rnames))
@@ -481,7 +488,9 @@ RReadOut <- function(out)
 
         ## Now saturation indexes
         block <- tot[(endspec[n] + 2) :( endsim[n] - 4)]
-        SI <- read.table( textConnection(block), fill=TRUE, row.names=1, as.is=TRUE)
+        block_conn <- textConnection(block)
+        SI <- read.table(block_conn, fill=TRUE, row.names=1, as.is=TRUE)
+        close(block_conn)
         names(SI) <- c("SI","IAP","logK","formula")
         
         ## finally pack all together
