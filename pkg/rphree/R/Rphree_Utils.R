@@ -1,5 +1,5 @@
-### Marco De Lucia, delucia@gfz-potsdam.de, 2009-2014
-### Time-stamp: "Last modified 2014-06-11 16:43:45 delucia"
+### Marco De Lucia, delucia@gfz-potsdam.de, 2009-2015
+### Time-stamp: "Last modified 2015-01-22 17:55:17 delucia"
 
 
 ##' Reads a normal PHREEQC input file and prepares it for
@@ -9,16 +9,16 @@
 ##' @title Read a normal PHREEQC input file and prepare it for Rphree
 ##' @param filein PHREEQC input script to read.
 ##' @param is.db Logical. Set to TRUE if reading a database, for
-##'    performing additional checks.
+##' performing additional checks.
 ##' @param tabs Logical, defaults to TRUE. Should we replace
-##'    tabulation with spaces?
-##' @return A buffer containing an input.
+##' tabulation with spaces?
+##' @return A buffer (character vector, one line per element)
+##' containing a synthctically valid PHREEQC input
 ##' @author MDL
 ##' @examples
 ##' \dontrun{inp <- RPhreeFile("test.phrq")
 ##' db <- RPhreeFile("db/phreeqc.dat",is.db=TRUE)}
 ##' @export
-
 RPhreeFile <- function(filein, is.db=FALSE, tabs=TRUE)
 {
     ## open connection, read, close file
@@ -512,7 +512,8 @@ RReadOut <- function(out)
 ##' @title RReadOutKin, import the output file of a kinetic simulation
 ##' into R
 ##' @param out The PHREEQC output file.
-##' @param strip don't know anymore
+##' @param strip logical. If TRUE, the "ListInfo" element will be
+##' appended to the list.
 ##' @param verbose logical. If TRUE more output is given to the
 ##' console (for debugging).
 ##' @return  An output list as per Rphree call.
@@ -555,7 +556,11 @@ RReadOutKin <- function(out, strip=TRUE, verbose=FALSE)
 
         ## how many kinetics??  
         nkin <- endkin[n] - start
-        kin <- read.table(textConnection(tot[(start):(start+nkin-1)]),row.names=1,fill=TRUE)[,c(2,1)]
+
+        kconn <- textConnection(tot[(start):(start+nkin-1)])
+        kin <- read.table(kconn, row.names=1,fill=TRUE)[,c(2,1)]
+        close(kconn)
+        
         colnames(kin) <- c("moles","delta")
         if (verbose)
             cat(paste(":: Read kinetic block ", n, "\n"))
@@ -563,7 +568,10 @@ RReadOutKin <- function(out, strip=TRUE, verbose=FALSE)
         ## next block in output file is EQUILIBRIUM_PHASES
         startpure <- endkin[n]+3
         npure <- endpure[n] - startpure - 1
-        pure <- read.table(textConnection(tot[startpure:(startpure+npure)]),row.names=1,fill=TRUE)[,c(5,6)]
+        pconn <- textConnection(tot[startpure:(startpure+npure)])
+        pure <- read.table(pconn, row.names=1,fill=TRUE)[,c(5,6)]
+        close(pconn)
+        
         colnames(pure) <- c("moles","delta")
         if (verbose)
             cat(paste(":: Read pphases block ", n, "of length",npure+1," \n"))
@@ -571,7 +579,11 @@ RReadOutKin <- function(out, strip=TRUE, verbose=FALSE)
         ## now solutes  
         startcomp <- endpure[n] + 2
         ncomp <- endcomp[n]-startcomp
-        comp <- read.table(textConnection(tot[startcomp:(startcomp+ncomp-1)]),row.names=1,fill=TRUE)
+
+        sconn <- textConnection(tot[startcomp:(startcomp+ncomp-1)])
+        comp <- read.table(sconn, row.names=1,fill=TRUE)
+        close(sconn)
+        
         colnames(comp) <- c("molal","moles")
         if (verbose)
             cat(paste(":: Read total solutes block ", n, "\n"))
@@ -595,7 +607,9 @@ RReadOutKin <- function(out, strip=TRUE, verbose=FALSE)
         text <- tot[startspec:(startspec+nspec-1)]
         ## find the short lines, and remove them (keep only long lines)
         textok <- unique(text[nchar(text) > 30])
-        species <- read.table(textConnection(textok),row.names=1,fill=TRUE)[,c(1,2,5)]
+
+        spconn <- textConnection(textok)
+        species <- read.table(spconn, row.names=1,fill=TRUE)[,c(1,2,5)]
         colnames(species) <- c("molal","act","log_gamma")
         if (verbose)
             cat(paste(":: Read speciation ", n, "\n"))

@@ -1,51 +1,71 @@
 ### Rphree library: interface R/PHREEQC (Parkhurst & Appelo)
 ### 
 ### Marco De Lucia, delucia@gfz-potsdam.de, 2009-2014
-### Time-stamp: "Last modified 2014-01-29 16:57:33 delucia"
+### Time-stamp: "Last modified 2015-01-22 18:21:03 delucia"
 
 ##' This function performs the actual PHREEQC calculations. 
 ##'
 ##' TODO
-##' @title Run PHREEQC
-##' @param input The input buffer
+##' @title Run online PHREEQC simulations
+##' @param input The prepared input buffer, in form of a character
+##' vector, one line per element
 ##' @param sel Selection of output blocks to be included in the
-##' formatted list. If missing, everything is included in the output
+##' formatted list. If missing, everything is included in the output.
+##' See also \code{RPhreeCheckSel} for more details.
 ##' @param write Logical. If TRUE, PHREEQC will write its usual output
-##' on file
-##' @param out If \code{write=TRUE}, the name of the output file to write to 
-##' @param db The database
-##' @param n Optional integer parameter containing the number of
-##' simulations included in the input buffer
-##' @param punch number of parameters included in the PUNCH block
-##' @param format Logical. If TRUE, the output blocks are nicely formatted
+##' on file on disk
+##' @param out If \code{write=TRUE}, this indicates the name of the
+##' output file to write to. The suffix ".Rout" will be added
+##' automatically
+##' @param db Character vector: the database. If \code{length(db)==1},
+##' "db" is interpreted as filename on disk (relative path from the
+##' working directory); or else, it is a buffer (character vector) as
+##' returned by \code{db <- RPhreeFile(dbfile, is.db=TRUE)}
+##' @param n Integer, optional parameter (deprecated, will be
+##' suppressed in future versions) containing the number of
+##' simulations included in the input buffer. If unspecified, some
+##' heuristics will be performed to know how many \code{SOLUTIONS} are
+##' present in the input buffer
+##' @param punch number of parameters included in the PUNCH block. Not
+##' used if no PUNCH statement is present in the input buffer
+##' @param format Logical. If TRUE (which is default), the output
+##' blocks are formatted as \code{data.frame}
 ##' @param verbose Logical. If TRUE, some additional checkpoint
-##' message is outputted to the console
+##' message is outputted to the R console
 ##' @return A list (or a list of lists) containing the output(s) of
 ##' the calculation
 ##' @author MDL
 ##' @useDynLib Rphree
+##' @examples
+##' \dontrun{ ## Load the database
+##' pqcdb <- RPhreeFile(system.file("extdata", "phreeqc.dat", package="Rphree"), is.db=TRUE)
+##' ## Load a phreeqc script
+##' ex1 <- RPhreeFile(system.file("extdata", "ex1.phrq", package="Rphree"), is.db=FALSE)
+##' ## Define a selection
+##' mysel <- c(kin=FALSE, tot=TRUE, desc=TRUE, species = TRUE, pphases = TRUE, SI=TRUE, punch =FALSE)
+##' ## Run PHREEQC!
+##' equipqc <- Rphree(ex1, db=pqcdb, sel=mysel, write=FALSE)
+##' }
+
 ##' @export
 Rphree <- function(input = stop("No input specified.\n"), sel,
                    write = FALSE, out = "Rphree", db = "phreeqc.dat",
                    n, punch = 0, format = TRUE, verbose = FALSE)
 {  
     if (length(db)==1) {
-        dbfile <- paste("db/",db,sep="")
-        if (!file.exists(dbfile))
+        if (!file.exists(db))
             stop(paste("Cannot find the database \"",dbfile,"\""))
-        db_inp<- RPhreeFile(dbfile)
-        lendb <- length(db_inp)
+        db_inp <- RPhreeFile(db, is.db=TRUE)
+        lendb  <- length(db_inp)
     } else {
-        db_inp<- db
-        lendb <- length(db_inp)
+        db_inp <- db
+        lendb  <- length(db_inp)
     }
 
   ## check the number of simulations if n is missing
     if (missing(n))
         {
             n <- length(grep("^SOLUTION",input))
-            ##  ntime <- system.time(n <- length(grep("^SOLUTION",input)))
-            ##  cat(paste(" -> ",ntime[3],"seconds lost searching for",n,"simulations\n"))
         }
     
     files <- c("Rphree", "RBuffInput", paste(out,".Rout",sep=""),
@@ -120,7 +140,7 @@ Rphree <- function(input = stop("No input specified.\n"), sel,
 ##' This is the workhorse function used for formatting the raw output
 ##' returned by PHREEQC at c-level. Not intended for direct use.
 ##'
-##' Bla bla bla
+##' TODO
 ##' @title Format the output returned by PHREEQC
 ##' @param out_list The list formed by the \code{.Call} to PQCLIB
 ##' @param sel The selection of output blocks

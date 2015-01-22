@@ -1,8 +1,8 @@
 ### Rphree library: interface R/PHREEQC (Parkhurst & Appelo)
 ### packaging-related functions
 ### 
-### Marco De Lucia, delucia@gfz-potsdam.de, 2009-2014
-### Time-stamp: "Last modified 2014-05-30 17:26:33 delucia"
+### Marco De Lucia, delucia@gfz-potsdam.de, 2009-2015
+### Time-stamp: "Last modified 2015-01-22 17:53:26 delucia"
 
 .onAttach <- function(libname,pkgname) {
   ## figuring version number, adapted from package mgcv/CHNOSZ
