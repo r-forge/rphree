@@ -23,7 +23,7 @@
 ##' be used in combination with it.
 ##' 
 ##' @name Rphree-package
-##' @aliases Rphree-package Rphree
+##' @aliases Rphree-package Rphreeqc
 ##' @docType package
 ##' @author Marco De Lucia \email{delucia@@gfz-potsdam.de} 
 ##' @references \url{http://doi.org/10.1016/j.egypro.2013.08.053} \cr

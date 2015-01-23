@@ -2,8 +2,8 @@
 % Please edit documentation in R/Rphree_Main.R
 \docType{package}
 \name{Rphree-package}
-\alias{Rphree}
 \alias{Rphree-package}
+\alias{Rphreeqc}
 \title{Rphree: R interface to the PHREEQC geochemical modeling program}
 \description{
 The Rphree package comprises an interface and utility functions
