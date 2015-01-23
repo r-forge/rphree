@@ -18,8 +18,11 @@ Reads a phreeqc output file and forms a results list as if the
 calculation were made with Rphree.
 }
 \details{
-Currently all blocks are read. NOTE: the "charge balance" and
-"Adjusted to redox" annotations are not read for the time being.
+Currently all blocks are read. For simulations with kinetics the
+function to use is \link{\code{RReadOutKin}}.
+}
+\examples{
+out <- RReadOut("ex.out")
 }
 \author{
 MDL

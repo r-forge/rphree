@@ -1,5 +1,5 @@
 ### Marco De Lucia, delucia@gfz-potsdam.de, 2009-2015
-### Time-stamp: "Last modified 2015-01-22 17:55:17 delucia"
+### Time-stamp: "Last modified 2015-01-23 16:08:54 delucia"
 
 
 ##' Reads a normal PHREEQC input file and prepares it for
@@ -353,26 +353,46 @@ RPhreeWriteInp <- function(ofile,input)
 ##' Reads a phreeqc output file and forms a results list as if the
 ##' calculation were made with Rphree.
 ##'
-##' Currently all blocks are read. NOTE: the "charge balance" and
-##' "Adjusted to redox" annotations are not read for the time being.
+##' Currently all blocks are read. For simulations with kinetics the
+##' function to use is \link{\code{RReadOutKin}}.
 ##' @title RReadOut
 ##' @param out The PHREEQC output file.
 ##' @return An output list, as if the simulation would have being run
 ##' through Rphree (the same blocks and the same names are returned)
 ##' @author MDL
 ##' @export
+##' @examples
+##' out <- RReadOut("ex.out")
 RReadOut <- function(out)
 {
-    ## note that empty lines are removed!
-    tot <- RPhreeFile(out, is.db=FALSE, tabs=TRUE) 
+    if (length(out)==1) {## is it a buffer or a file?
+        ## note that empty lines are removed!
+        cat(paste("RReadOut:: opening file",out,"\n"))
+        tot <- RPhreeFile(out, is.db=FALSE, tabs=TRUE) 
+    } else {
+        ## remove empty lines and tabs as in RPhreeFile, store
+        ## everything in "tot"
+        cat("RReadOut:: scanning the buffer... \n")
+        tot <- sub(' +$', '', out)  ## remove spaces at the end of the lines
+        tot <- sub("#.*$","", tot)  ## remove everything after the #'s
+        tot <- gsub('\t', '  ', tot)  ## substitute tabs with spaces
+        tot <- tot[tot!=""]        ## remove empty elements
+    }
 
+    ## some extra lines in PHREEQC version 3 we need to take care of
+    toremove <- grep("^\\*\\*For", tot)
+    if (length(toremove)>0) {
+        toremove <- sort(c(toremove, toremove+1))
+        tot <- tot[-toremove]
+    }
+   
     solutions <- grep("Beginning of initial solution calculations", tot)
     ntot <- length(solutions)
 
     ## This is unique (only for calculated solution)
     endsim <- grep('End of simulation.',tot,fixed=TRUE)
 
-    cat(paste("ReadOut::",ntot," sims in file",out,"..."))
+    cat(paste("RReadOut::",ntot," simulation in the given output"))
 
     ## "phase assemblage" is unique, but could not be there
     has_pphases <- TRUE
@@ -521,16 +541,35 @@ RReadOut <- function(out)
 ##' @export
 RReadOutKin <- function(out, strip=TRUE, verbose=FALSE)
 {
-    tot <- RPhreeFile(out, is.db=FALSE, tabs=TRUE) ## note that empty
-    ## lines are removed!
+    if (length(out)==1) {## is it a buffer or a file?
+        ## note that empty lines are removed!
+        cat(paste("RReadOutKin:: opening file",out,"\n"))
+        tot <- RPhreeFile(out, is.db=FALSE, tabs=TRUE) 
+    } else {
+        ## remove empty lines and tabs as in RPhreeFile, store
+        ## everything in "tot"
+        cat("RReadOutKin:: scanning the buffer... \n")
+        tot <- sub(' +$', '', out)  ## remove spaces at the end of the lines
+        tot <- sub("#.*$","", tot)  ## remove everything after the #'s
+        tot <- gsub('\t', '  ', tot)  ## substitute tabs with spaces
+        tot <- tot[tot!=""]        ## remove empty elements
+     }
 
+    ## some extra lines in PHREEQC version 3 we need to take care of
+    toremove <- grep("^\\*\\*For", tot)
+    if (length(toremove)>0) {
+        toremove <- sort(c(toremove, toremove+1))
+        tot <- tot[-toremove]
+        if (verbose) cat("RReadOutKin:: Appears to be PHREEQC version 3\n")
+    }
+    
     times <- grep("Time step:", tot, fixed=TRUE)
     ntot <- length(times)
 
     years <- round(as.numeric(sub('\ .*$','',gsub('.*:\ ','',tot[times]))),1)
     if (verbose) {
        cat(out,":\n")
-       cat(paste("ReadOut:: Found ",ntot,"time steps, the last at time",years[ntot],"\n"))
+       cat(paste("RReadOutKin:: Found ",ntot,"time steps, the last at time",years[ntot],"\n"))
     }
     endkin  <- grep('-Phase assemblage-',tot,fixed=TRUE)
     endpure <- grep('-Solution composition-',tot,fixed=TRUE)[-1]
@@ -538,6 +577,10 @@ RReadOutKin <- function(out, strip=TRUE, verbose=FALSE)
     enddesc <- grep('-Distribution of species-',tot,fixed=TRUE)[-1]
     endspec <- grep('-Saturation indices-',tot,fixed=TRUE)[-1]
 
+    ## This is unique (only for calculated solution)
+    endsim <- grep('Reaction step',tot,fixed=TRUE)[-1]
+    endtot <- grep('End of simulation',tot,fixed=TRUE)
+    endsim <- c(endsim, endtot-1)
 
     if (strip) ## do you want "ListInfo"?
         reslen <- ntot
@@ -550,7 +593,7 @@ RReadOutKin <- function(out, strip=TRUE, verbose=FALSE)
     ## loop over all steps
     for (n in seq_along(times)) {
     	if (verbose)
-	    cat(paste(":: Reading", n, "solution, time ",years[n],"\n"))
+	    cat(paste("RReadOutKin:: Reading", n, "solution, time ",years[n],"\n"))
         ## find the last solution
         start <- times[n]+2
 
@@ -563,7 +606,7 @@ RReadOutKin <- function(out, strip=TRUE, verbose=FALSE)
         
         colnames(kin) <- c("moles","delta")
         if (verbose)
-            cat(paste(":: Read kinetic block ", n, "\n"))
+            cat(paste("RReadOutKin:: Read kinetic block ", n, "\n"))
         
         ## next block in output file is EQUILIBRIUM_PHASES
         startpure <- endkin[n]+3
@@ -574,7 +617,7 @@ RReadOutKin <- function(out, strip=TRUE, verbose=FALSE)
         
         colnames(pure) <- c("moles","delta")
         if (verbose)
-            cat(paste(":: Read pphases block ", n, "of length",npure+1," \n"))
+            cat(paste("RReadOutKin:: Read pphases block ", n, "of length",npure+1," \n"))
         
         ## now solutes  
         startcomp <- endpure[n] + 2
@@ -586,35 +629,62 @@ RReadOutKin <- function(out, strip=TRUE, verbose=FALSE)
         
         colnames(comp) <- c("molal","moles")
         if (verbose)
-            cat(paste(":: Read total solutes block ", n, "\n"))
+            cat(paste("RReadOutKin:: Read total solutes block ", n, "\n"))
 
-        ## misc: pH, pe, ecc
-        pHline <- tot[max(grep('pH  = ',tot,fixed=TRUE))]
-        pH <- as.numeric(unlist(strsplit(pHline," +"))[3])
-        peline <- tot[max(grep('pe  = ',tot,fixed=TRUE))]
-        pe <- as.numeric(unlist(strsplit(peline," +"))[3])
-        templine <- tot[max(grep('Temperature (deg C)',tot,fixed=TRUE))]
-        temp <- as.numeric(unlist(strsplit(templine," +"))[5])
-        waterline <- tot[max(grep('Mass of water (kg)',tot,fixed=TRUE))]
-        water <- as.numeric(unlist(strsplit(waterline," +"))[6])
-        desc <- data.frame(val=c(pH,pe,temp,water),ann=c("charge","Adj","",""))
-        rownames(desc) <- c("pH","pe","temp","water")
+        ## desc: pH, pe, ecc
+        block <- tot[(endcomp[n]+1):(enddesc[n]-1)]
+        pH <- as.numeric(unlist(strsplit(grep('^pH',block, value=TRUE)," +"))[3])
+        pe <- as.numeric(unlist(strsplit(grep('^pe',block, value=TRUE)," +"))[3])
+        temp <- as.numeric(unlist(strsplit(grep('^Temperature ',block,value=TRUE)," = "))[2])
+        water <- as.numeric(unlist(strsplit(grep('Mass of water',block,fixed=TRUE,value=TRUE)," = "))[2])
+        WaterActivity <- as.numeric(unlist(strsplit(grep('Activity of water',block,fixed=TRUE,value=TRUE)," = "))[2])
+        IonStr <- as.numeric(unlist(strsplit(grep('Ionic strength',block,fixed=TRUE,value=TRUE)," = "))[2])
+        TotAlk <- as.numeric(unlist(strsplit(grep('Total alkalinity',block,fixed=TRUE,value=TRUE)," = "))[2])
+        Tot_C  <- as.numeric(unlist(strsplit(grep('Total carbon',block,fixed=TRUE,value=TRUE)," = "))[2])
+        Tot_CO2  <- as.numeric(unlist(strsplit(grep('Total CO2',block,fixed=TRUE,value=TRUE)," = "))[2])
+        ElBal <- as.numeric(unlist(strsplit(grep('Electrical balance',block,fixed=TRUE,value=TRUE)," = "))[2])
+        Per_Error <- as.numeric(unlist(strsplit(grep('Percent error',block,fixed=TRUE,value=TRUE)," = "))[2])
+        Iter <- as.numeric(unlist(strsplit(grep('^Iterations',block,value=TRUE)," = "))[2])
+        Tot_H <- as.numeric(unlist(strsplit(grep('Total H',block,fixed=TRUE,value=TRUE)," = "))[2])
+        Tot_O <- as.numeric(unlist(strsplit(grep('Total O',block,fixed=TRUE,value=TRUE)," = "))[2])
+                block <- tot[(endcomp[n]+1):(enddesc[n]-1)]
 
+        desc <- data.frame(val=c(pH=pH,pe=pe,temp=temp,water=water,WaterActivity=WaterActivity,
+                               Tot_Alk=TotAlk, IonicStr=IonStr, ElectrBal=ElBal,
+                               Per_Error=Per_Error, iterations=Iter, Tot_CO2=Tot_CO2, Tot_H=Tot_H, Tot_O=Tot_O))
+            
 
-        ## species
-        startspec <- enddesc[n] + 4
-        nspec <- endspec[n]-startspec
-        text <- tot[startspec:(startspec+nspec-1)]
-        ## find the short lines, and remove them (keep only long lines)
-        textok <- unique(text[nchar(text) > 30])
+        ## next block in output is the speciation
+        block <- tot[(enddesc[n] + 4) :( endspec[n] - 1)]
+        ## find out the short lines
+        shorts <- nchar(block) 
+        excl <- which(shorts < mean(shorts))
+        block <- block[-excl]
 
-        spconn <- textConnection(textok)
-        species <- read.table(spconn, row.names=1,fill=TRUE)[,c(1,2,5)]
-        colnames(species) <- c("molal","act","log_gamma")
+        block_conn <- textConnection(block)
+        ## Now we can read.table it
+        tmp <- read.table( block_conn, fill=TRUE, as.is=TRUE)[,c(1,2,3)]
+        close(block_conn)
+        ## remove duplicated
+        rnames <- tmp$V1
+        dup <- which(!duplicated(rnames))
+        species <- tmp[dup,c(2,3)]
+        rownames(species) <- rnames[dup]
+        colnames(species) <- c("molal","act")
+        
         if (verbose)
-            cat(paste(":: Read speciation ", n, "\n"))
+            cat(paste("RReadOutKin:: Read speciation ", n, "\n"))
 
-        res[[n]] <- list(desc=desc, pphases=pure, tot=comp, species=species, kin=kin)
+        ## Now saturation indexes
+        block <- tot[(endspec[n] + 2) :( endsim[n]-1)]
+        block_conn <- textConnection(block)
+        SI <- read.table(block_conn, fill=TRUE, row.names=1, as.is=TRUE)
+        close(block_conn)
+        names(SI) <- c("SI","IAP","logK","formula")
+        
+        ## finally pack all together
+        res[[n]] <- list(desc=desc, pphases=pure, tot=comp, SI=SI, species=species, kin=kin)
+
         ## end loop over time steps
     }
 

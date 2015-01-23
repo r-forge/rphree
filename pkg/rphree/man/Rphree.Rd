@@ -2,7 +2,7 @@
 % Please edit documentation in R/Rphree_Main.R
 \name{Rphree}
 \alias{Rphree}
-\title{Run online PHREEQC simulations}
+\title{Run online PHREEQC with the shipped 2.17 version}
 \usage{
 Rphree(input = stop("No input specified.\\n"), sel, write = FALSE,
   out = "Rphree", db = "phreeqc.dat", n, punch = 0, format = TRUE,
