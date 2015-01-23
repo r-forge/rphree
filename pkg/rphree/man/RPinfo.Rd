@@ -17,12 +17,12 @@ kin, SI"}
 \item{prop}{The name of the inquired property (element, species,
 mineral phase,\dots) whose value(s)}
 
-\item{force}{Logical. If TRUE (default if left unspecified), a valid numeric value (0) is returned even if the property is not found
-value is returned if the inquired property is not found in the
-solution}
+\item{force}{Logical. If TRUE (default if left unspecified), a
+valid numeric value (0) is returned even if the inquired property
+is not found in the solution}
 
-\item{flex}{Logical. If TRUE, expects no "ListInfo" in the
-formatted solution list and performs heuristics to circumvent this
+\item{flex}{Logical. If TRUE, do not rely on "ListInfo" in the
+formatted solution list and perform heuristics to circumvent this
 absence}
 }
 \value{

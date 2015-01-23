@@ -15,11 +15,11 @@ through Rphree (the same blocks and the same names are returned)
 }
 \description{
 Reads a phreeqc output file and forms a results list as if the
-calculation were made with Rphree.
+calculation were made with \code{\link{Rphree}}.
 }
 \details{
 Currently all blocks are read. For simulations with kinetics the
-function to use is \link{\code{RReadOutKin}}.
+function to use is \code{\link{RReadOutKin}}.
 }
 \examples{
 out <- RReadOut("ex.out")

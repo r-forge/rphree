@@ -1,5 +1,5 @@
 ### Marco De Lucia, delucia@gfz-potsdam.de, 2009-2015
-### Time-stamp: "Last modified 2015-01-23 16:08:54 delucia"
+### Time-stamp: "Last modified 2015-01-23 17:55:57 delucia"
 
 
 ##' Reads a normal PHREEQC input file and prepares it for
@@ -351,10 +351,10 @@ RPhreeWriteInp <- function(ofile,input)
 
 
 ##' Reads a phreeqc output file and forms a results list as if the
-##' calculation were made with Rphree.
+##' calculation were made with \code{\link{Rphree}}.
 ##'
 ##' Currently all blocks are read. For simulations with kinetics the
-##' function to use is \link{\code{RReadOutKin}}.
+##' function to use is \code{\link{RReadOutKin}}.
 ##' @title RReadOut
 ##' @param out The PHREEQC output file.
 ##' @return An output list, as if the simulation would have being run
@@ -775,11 +775,11 @@ RPhreeCheckSel <- function(sel)
 ##' kin, SI"
 ##' @param prop The name of the inquired property (element, species,
 ##' mineral phase,\dots) whose value(s)
-##' @param force Logical. If TRUE (default if left unspecified), a valid numeric value (0) is returned even if the property is not found
-##' value is returned if the inquired property is not found in the
-##' solution
-##' @param flex Logical. If TRUE, expects no "ListInfo" in the
-##' formatted solution list and performs heuristics to circumvent this
+##' @param force Logical. If TRUE (default if left unspecified), a
+##' valid numeric value (0) is returned even if the inquired property
+##' is not found in the solution
+##' @param flex Logical. If TRUE, do not rely on "ListInfo" in the
+##' formatted solution list and perform heuristics to circumvent this
 ##' absence
 ##' @return A numeric vector containing the inquired properties
 ##' @author MDL
