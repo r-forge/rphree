@@ -22,7 +22,9 @@ Currently all blocks are read. For simulations with kinetics the
 function to use is \code{\link{RReadOutKin}}.
 }
 \examples{
+\dontrun{
 out <- RReadOut("ex.out")
+}
 }
 \author{
 MDL

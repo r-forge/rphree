@@ -1,7 +1,7 @@
 ### Rphree library: interface R/PHREEQC (Parkhurst & Appelo)
 ### 
 ### Marco De Lucia, delucia@gfz-potsdam.de, 2009-2014
-### Time-stamp: "Last modified 2015-01-23 16:11:56 delucia"
+### Time-stamp: "Last modified 2015-01-24 22:14:43 delucia"
 
 ##' Rphree: R interface to the PHREEQC geochemical modeling program
 ##' 
@@ -30,7 +30,7 @@
 ##' \url{http://rphree.r-forge.r-project.org/}
 ##' @keywords package
 ##' @examples
-##'
+##' \dontrun{
 ##' ## start R and load Rphree
 ##' library(Rphree)
 ##'
@@ -68,6 +68,7 @@
 ##' ## Use Rphree's functions to parse the output buffer in a suitable
 ##' ## structure for further R manipulation or visualization
 ##' res <- RReadOut(out=phrOut)
+##' }
 NULL
 
 

@@ -1,5 +1,5 @@
 ### Marco De Lucia, delucia@gfz-potsdam.de, 2009-2015
-### Time-stamp: "Last modified 2015-01-23 17:55:57 delucia"
+### Time-stamp: "Last modified 2015-01-24 22:13:26 delucia"
 
 
 ##' Reads a normal PHREEQC input file and prepares it for
@@ -362,7 +362,9 @@ RPhreeWriteInp <- function(ofile,input)
 ##' @author MDL
 ##' @export
 ##' @examples
+##' \dontrun{
 ##' out <- RReadOut("ex.out")
+##' }
 RReadOut <- function(out)
 {
     if (length(out)==1) {## is it a buffer or a file?

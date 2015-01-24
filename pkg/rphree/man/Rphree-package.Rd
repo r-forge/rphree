@@ -25,6 +25,7 @@ CRAN, and which is the mere R interface to IPhreeqc module
 be used in combination with it.
 }
 \examples{
+\dontrun{
 ## start R and load Rphree
 library(Rphree)
 
@@ -62,6 +63,7 @@ phrOut <- phrGetOutputStrings()
 ## Use Rphree's functions to parse the output buffer in a suitable
 ## structure for further R manipulation or visualization
 res <- RReadOut(out=phrOut)
+}
 }
 \author{
 Marco De Lucia \email{delucia@gfz-potsdam.de}
