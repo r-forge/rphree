@@ -15,3 +15,4 @@ Encoding: UTF-8
 NeedsCompilation: yes
 Depends:
     R (>= 3.0)
+RoxygenNote: 6.0.1
