@@ -1,9 +1,8 @@
 Package: Rphree
-Version: 0.1-6
-Date: 2015-01-23
-Type: Package
 Title: Interface to the geochemical modelling program PHREEQC
-Author: Marco De Lucia
+Version: 0.1-7
+Date: 2018-08-31
+Authors@R: person("Marco", "De Lucia", email = "delucia@gfz-potsdam.de", role = c("aut", "cre"))
 Maintainer: Marco De Lucia <delucia@gfz-potsdam.de>
 Description: Interface and utility functions for the geochemical
     simulator PHREEQC. PHREEQC (version 2.17) itself is shipped in
@@ -12,7 +11,6 @@ Description: Interface and utility functions for the geochemical
     manipulations are included.
 License: MIT + file LICENSE
 Encoding: UTF-8
-NeedsCompilation: yes
 Depends:
     R (>= 3.0)
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0

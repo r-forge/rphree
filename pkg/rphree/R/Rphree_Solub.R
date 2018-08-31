@@ -2,7 +2,7 @@
 ## Duan_Sun
 
 ### Marco De Lucia, delucia@gfz-potsdam.de, 2009-2014
-### Time-stamp: "Last modified 2014-01-29 17:02:35 delucia"
+### Time-stamp: "Last modified 2018-08-31 10:50:00 delucia"
 
 ##' Solubility of CO2 in NaCl solutions in mol/kg water Duan & Sun
 ##' (2003) Chemical Geology 193 (2003) 257-271. Adapted from excel
@@ -338,5 +338,28 @@ RKS_SI_CO2 <- function(Tk, Pmpa, poy=TRUE, V=NULL)
   }
   SI <- log10(dsphi*Patm*Poy)
   return(SI)
+}
+
+
+##' Duan & Sun model to calculate vapor pressure of water
+##' 
+##' @title Vapor pressure of water 
+##' @param Tk Temperature in K
+##' @return Vapor pressure of water in MPa
+##' @author MDL
+##' @export
+PH2Ompa <- function(Tk)
+{
+  c1 = -38.640844
+  c2 = 5.894842
+  c3 = 59.876516
+  c4 = 26.654627
+  c5 = 10.637097
+  PcH2O = 220.85     ## bar
+  TcH2O = 647.29     ## K
+
+  T = (Tk - TcH2O) / TcH2O
+
+  return(0.1 * PcH2O * Tk/TcH2O*(1+c1*(-T)^1.9 + c2*T +c3*T^2 + c4*T^3 + c5*T^4))
 }
 
